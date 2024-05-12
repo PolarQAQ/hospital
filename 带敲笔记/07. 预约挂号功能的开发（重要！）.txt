@@ -1,0 +1,571 @@
+预约挂号卡片式设计
+菜单：
+
+<el-menu-item index="/doctorCard">预约挂号</el-menu-item>
+<el-menu-item index="/reserve">患者挂号</el-menu-item>
+路由：
+
+{ path: 'doctorCard', name: 'DoctorCard', meta: { name: '预约挂号' }, component: () => import('../views/manager/DoctorCard') },
+{ path: 'reserve', name: 'Reserve', meta: { name: '患者挂号' }, component: () => import('../views/manager/Reserve') },
+挂号卡片式设计
+
+<template>
+  <div>
+    <div class="search">
+      <el-select v-model="departmentId" placeholder="请选择科室" style="width: 200px">
+        <el-option v-for="item in departmentData" :key="item.id" :label="item.name" :value="item.id">
+        </el-option>
+      </el-select>
+      <el-button type="info" plain style="margin-left: 10px" @click="load(1)">查询</el-button>
+      <el-button type="warning" plain style="margin-left: 10px" @click="reset">重置</el-button>
+    </div>
+
+    <div class="table" style="padding: 15px 20px">
+      <el-row :gutter="20">
+        <el-col :span="6" v-for="item in tableData" style="margin-bottom: 20px">
+          <div style="text-align: center; background-color: #ecf8fd" class="card">
+            <img :src="item.avatar" alt="" style="width: 100px; height: 100px; border-radius: 50%">
+            <div style="font-weight: 550; margin-top: 10px">
+              {{item.name}} <span style="color: #383535; margin-left: 5px; font-weight: 500">{{item.departmentName}}</span>
+            </div>
+            <div style="margin-top: 20px; color: #353523; padding: 0 10px; text-align: left; overflow: hidden;text-overflow: ellipsis;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 4;">
+              简介：{{item.description}}
+            </div>
+            <div style="margin-top: 15px">
+              挂号费：<span style="color: red; font-weight: 550; margin-right: 20px">￥{{item.price}}</span> 剩余：{{item.num}}
+            </div>
+            <div style="margin-top: 15px">
+              <el-button type="primary" size="mini" @click="reserve(item.id)">挂号</el-button>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <div class="pagination">
+        <el-pagination
+            background
+            @current-change="handleCurrentChange"
+            :current-page="pageNum"
+            :page-sizes="[5, 10, 20]"
+            :page-size="pageSize"
+            layout="total, prev, pager, next"
+            :total="total">
+        </el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Doctor",
+  data() {
+    return {
+      tableData: [],  // 所有的数据
+      pageNum: 1,   // 当前的页码
+      pageSize: 10,  // 每页显示的个数
+      total: 0,
+      departmentId: null,
+      fromVisible: false,
+      form: {},
+      user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
+      rules: {},
+      ids: [],
+      departmentData: []
+    }
+  },
+  created() {
+    this.load(1)
+    this.loadDepartment()
+  },
+  methods: {
+    reserve(doctorId) {
+      let data = {
+        userId: this.user.id,
+        doctorId: doctorId
+      }
+      this.$request.post('/reserve/add', data).then(res => {
+        if (res.code === '200') {
+          this.$message.success('挂号成功')
+          this.load(1)
+        } else {
+          this.$message.error(res.msg)
+        }
+      })
+    },
+    loadDepartment() {
+      this.$request.get('/department/selectAll').then(res => {
+        if (res.code === '200') {
+          this.departmentData = res.data
+        } else {
+          this.$message.error(res.msg)
+        }
+      })
+    },
+    load(pageNum) {  // 分页查询
+      if (pageNum) this.pageNum = pageNum
+      this.$request.get('/doctor/selectPage2', {
+        params: {
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
+          departmentId: this.departmentId,
+        }
+      }).then(res => {
+        this.tableData = res.data?.list
+        this.total = res.data?.total
+      })
+    },
+    reset() {
+      this.departmentId = null
+      this.load(1)
+    },
+    handleCurrentChange(pageNum) {
+      this.load(pageNum)
+    },
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+后台接口和逻辑
+@GetMapping("/selectPage2")
+public Result selectPage2(Doctor doctor,
+                         @RequestParam(defaultValue = "1") Integer pageNum,
+                         @RequestParam(defaultValue = "10") Integer pageSize) {
+    PageInfo<Doctor> page = doctorService.selectPage2(doctor, pageNum, pageSize);
+    return Result.success(page);
+}
+public PageInfo<Doctor> selectPage2(Doctor doctor, Integer pageNum, Integer pageSize) {
+    String today = DateUtil.format(new Date(), "yyyy-MM-dd");
+    // 查询在诊医生的时候，除了根据科室，还得根据当天是星期几，筛选出当天在诊的医生
+    String week = getTodayWeek();
+    doctor.setWeek(week);
+    PageHelper.startPage(pageNum, pageSize);
+    List<Doctor> list = doctorMapper.selectAll(doctor);
+    // 计算查出来的在诊医生剩余多少个号
+    for (Doctor dbDoctor : list) {
+        // 查询出来当天已经挂过该医生号的数量
+        Reserve reserve = new Reserve();
+        reserve.setDoctorId(dbDoctor.getId());
+        reserve.setTime(today);
+        List<Reserve> reserves = reserveMapper.selectAll(reserve);
+        Plan plan = planMapper.selectByDoctorIdAndWeek(dbDoctor.getId(), week);
+        // 用总数量-已经挂过的号数量 = 剩余挂号数量
+        dbDoctor.setNum(plan.getNum() - reserves.size());
+    }
+    return PageInfo.of(list);
+}
+创建预约挂号表
+CREATE TABLE `reserve` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` int(10) DEFAULT NULL COMMENT '患者ID',
+  `doctor_id` int(10) DEFAULT NULL COMMENT '医生ID',
+  `time` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '挂号时间',
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '挂号状态',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='预约挂号表';
+Entity
+public class Reserve implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /** ID */
+    private Integer id;
+    private Integer doctorId;
+    private Integer userId;
+    private String time;
+    private String status;
+
+    private String doctorName;
+    private String userName;
+}
+Mapper
+public interface ReserveMapper {
+
+    /**
+      * 新增
+    */
+    int insert(Reserve reserve);
+
+    /**
+      * 删除
+    */
+    int deleteById(Integer id);
+
+    /**
+      * 修改
+    */
+    int updateById(Reserve reserve);
+
+    /**
+      * 根据ID查询
+    */
+    Reserve selectById(Integer id);
+
+    /**
+      * 查询所有
+    */
+    List<Reserve> selectAll(Reserve reserve);
+
+}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.ReserveMapper">
+
+    <sql id="Base_Column_List">
+        id,user_id,doctor_id,time,status
+    </sql>
+
+    <select id="selectAll" resultType="com.example.entity.Reserve">
+        select reserve.*, user.name as userName, doctor.name as doctorName
+        from reserve
+        left join user on reserve.user_id = user.id
+        left join doctor on reserve.doctor_id = doctor.id
+        <where>
+            <if test="id != null"> and id= #{id}</if>
+            <if test="status != null"> and status= #{status}</if>
+            <if test="doctorId != null"> and reserve.doctor_id= #{doctorId}</if>
+            <if test="time != null"> and reserve.time= #{time}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectById" resultType="com.example.entity.Reserve">
+        select
+        <include refid="Base_Column_List" />
+        from reserve
+        where id = #{id}
+    </select>
+
+    <delete id="deleteById">
+        delete from reserve
+        where  id = #{id}
+    </delete>
+
+    <insert id="insert" parameterType="com.example.entity.Reserve" useGeneratedKeys="true">
+        insert into reserve
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="userId != null">user_id,</if>
+                <if test="doctorId != null">doctor_id,</if>
+                <if test="time != null">time,</if>
+                <if test="status != null">status,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id},</if>
+                <if test="userId != null">#{userId},</if>
+                <if test="doctorId != null">#{doctorId},</if>
+                <if test="time != null">#{time},</if>
+                <if test="status != null">#{status},</if>
+        </trim>
+    </insert>
+
+    <update id="updateById" parameterType="com.example.entity.Reserve">
+        update reserve
+        <set>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="doctorId != null">
+                doctor_id = #{doctorId},
+            </if>
+            <if test="time != null">
+                time = #{time},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        where id = #{id} 
+    </update>
+
+</mapper>
+Service
+@Service
+public class ReserveService {
+
+    @Resource
+    private ReserveMapper reserveMapper;
+
+    /**
+     * 新增
+     */
+    public void add(Reserve reserve) {
+        reserve.setTime(DateUtil.format(new Date(), "yyyy-MM-dd"));
+        reserve.setStatus(CallEnum.STATUS_NO.status);
+        reserveMapper.insert(reserve);
+    }
+
+    /**
+     * 删除
+     */
+    public void deleteById(Integer id) {
+        reserveMapper.deleteById(id);
+    }
+
+    /**
+     * 批量删除
+     */
+    public void deleteBatch(List<Integer> ids) {
+        for (Integer id : ids) {
+            reserveMapper.deleteById(id);
+        }
+    }
+
+    /**
+     * 修改
+     */
+    public void updateById(Reserve reserve) {
+        reserveMapper.updateById(reserve);
+    }
+
+    /**
+     * 根据ID查询
+     */
+    public Reserve selectById(Integer id) {
+        return reserveMapper.selectById(id);
+    }
+
+    /**
+     * 查询所有
+     */
+    public List<Reserve> selectAll(Reserve reserve) {
+        return reserveMapper.selectAll(reserve);
+    }
+
+    /**
+     * 分页查询
+     */
+    public PageInfo<Reserve> selectPage(Reserve reserve, Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<Reserve> list = reserveMapper.selectAll(reserve);
+        return PageInfo.of(list);
+    }
+
+}
+Controller
+@RestController
+@RequestMapping("/reserve")
+public class ReserveController {
+
+    @Resource
+    private ReserveService reserveService;
+
+    /**
+     * 新增
+     */
+    @PostMapping("/add")
+    public Result add(@RequestBody Reserve reserve) {
+        reserveService.add(reserve);
+        return Result.success();
+    }
+
+    /**
+     * 删除
+     */
+    @DeleteMapping("/delete/{id}")
+    public Result deleteById(@PathVariable Integer id) {
+        reserveService.deleteById(id);
+        return Result.success();
+    }
+
+    /**
+     * 批量删除
+     */
+    @DeleteMapping("/delete/batch")
+    public Result deleteBatch(@RequestBody List<Integer> ids) {
+        reserveService.deleteBatch(ids);
+        return Result.success();
+    }
+
+    /**
+     * 修改
+     */
+    @PutMapping("/update")
+    public Result updateById(@RequestBody Reserve reserve) {
+        reserveService.updateById(reserve);
+        return Result.success();
+    }
+
+    /**
+     * 根据ID查询
+     */
+    @GetMapping("/selectById/{id}")
+    public Result selectById(@PathVariable Integer id) {
+        Reserve reserve = reserveService.selectById(id);
+        return Result.success(reserve);
+    }
+
+    /**
+     * 查询所有
+     */
+    @GetMapping("/selectAll")
+    public Result selectAll(Reserve reserve ) {
+        List<Reserve> list = reserveService.selectAll(reserve);
+        return Result.success(list);
+    }
+
+    /**
+     * 分页查询
+     */
+    @GetMapping("/selectPage")
+    public Result selectPage(Reserve reserve,
+                             @RequestParam(defaultValue = "1") Integer pageNum,
+                             @RequestParam(defaultValue = "10") Integer pageSize) {
+        PageInfo<Reserve> page = reserveService.selectPage(reserve, pageNum, pageSize);
+        return Result.success(page);
+    }
+
+}
+挂号页面
+<template>
+  <div>
+    <div class="search">
+      <el-input placeholder="请输入挂号状态" style="width: 200px" v-model="status"></el-input>
+      <el-button type="info" plain style="margin-left: 10px" @click="load(1)">查询</el-button>
+      <el-button type="warning" plain style="margin-left: 10px" @click="reset">重置</el-button>
+    </div>
+
+    <div class="table">
+      <el-table :data="tableData" stripe  @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center"></el-table-column>
+        <el-table-column prop="id" label="序号" width="80" align="center" sortable></el-table-column>
+        <el-table-column prop="userName" label="患者姓名" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="doctorName" label="医生姓名" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="time" label="挂号时间"></el-table-column>
+        <el-table-column prop="status" label="挂号状态"></el-table-column>
+
+        <el-table-column label="操作" width="180" align="center">
+          <template v-slot="scope">
+            <el-button plain type="primary" @click="handleEdit(scope.row)" size="mini">编辑</el-button>
+            <el-button plain type="danger" size="mini" @click=del(scope.row.id)>删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination">
+        <el-pagination
+            background
+            @current-change="handleCurrentChange"
+            :current-page="pageNum"
+            :page-sizes="[5, 10, 20]"
+            :page-size="pageSize"
+            layout="total, prev, pager, next"
+            :total="total">
+        </el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Reserve",
+  data() {
+    return {
+      tableData: [],  // 所有的数据
+      pageNum: 1,   // 当前的页码
+      pageSize: 10,  // 每页显示的个数
+      total: 0,
+      status: null,
+      fromVisible: false,
+      form: {},
+      user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
+      rules: {},
+      ids: []
+    }
+  },
+  created() {
+    this.load(1)
+  },
+  methods: {
+    handleAdd() {   // 新增数据
+      this.form = {}  // 新增数据的时候清空数据
+      this.fromVisible = true   // 打开弹窗
+    },
+    handleEdit(row) {   // 编辑数据
+      this.form = JSON.parse(JSON.stringify(row))  // 给form对象赋值  注意要深拷贝数据
+      this.fromVisible = true   // 打开弹窗
+    },
+    save() {   // 保存按钮触发的逻辑  它会触发新增或者更新
+      this.$refs.formRef.validate((valid) => {
+        if (valid) {
+          this.$request({
+            url: this.form.id ? '/reserve/update' : '/reserve/add',
+            method: this.form.id ? 'PUT' : 'POST',
+            data: this.form
+          }).then(res => {
+            if (res.code === '200') {  // 表示成功保存
+              this.$message.success('保存成功')
+              this.load(1)
+              this.fromVisible = false
+            } else {
+              this.$message.error(res.msg)  // 弹出错误的信息
+            }
+          })
+        }
+      })
+    },
+    del(id) {   // 单个删除
+      this.$confirm('您确定删除吗？', '确认删除', {type: "warning"}).then(response => {
+        this.$request.delete('/reserve/delete/' + id).then(res => {
+          if (res.code === '200') {   // 表示操作成功
+            this.$message.success('操作成功')
+            this.load(1)
+          } else {
+            this.$message.error(res.msg)  // 弹出错误的信息
+          }
+        })
+      }).catch(() => {
+      })
+    },
+    handleSelectionChange(rows) {   // 当前选中的所有的行数据
+      this.ids = rows.map(v => v.id)   //  [1,2]
+    },
+    delBatch() {   // 批量删除
+      if (!this.ids.length) {
+        this.$message.warning('请选择数据')
+        return
+      }
+      this.$confirm('您确定批量删除这些数据吗？', '确认删除', {type: "warning"}).then(response => {
+        this.$request.delete('/reserve/delete/batch', {data: this.ids}).then(res => {
+          if (res.code === '200') {   // 表示操作成功
+            this.$message.success('操作成功')
+            this.load(1)
+          } else {
+            this.$message.error(res.msg)  // 弹出错误的信息
+          }
+        })
+      }).catch(() => {
+      })
+    },
+    load(pageNum) {  // 分页查询
+      if (pageNum) this.pageNum = pageNum
+      this.$request.get('/reserve/selectPage', {
+        params: {
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
+          title: this.title,
+        }
+      }).then(res => {
+        this.tableData = res.data?.list
+        this.total = res.data?.total
+      })
+    },
+    reset() {
+      this.title = null
+      this.load(1)
+    },
+    handleCurrentChange(pageNum) {
+      this.load(pageNum)
+    },
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

@@ -1,0 +1,482 @@
+创建住院登记信息表
+CREATE TABLE `registration` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` int(10) DEFAULT NULL COMMENT '患者ID',
+  `room` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '房号',
+  `price` double(10,2) DEFAULT NULL COMMENT '费用',
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '缴费状态',
+  `medicine` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '是否医保',
+  `hos_status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '住院状态',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='住院登记表';
+Entity
+public class Registration implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /** ID */
+    private Integer id;
+    private Integer userId;
+    private String room;
+    private Double price;
+    private String status;
+    private String medicine;
+    private String hosStatus;
+
+    private String userName;
+
+}
+Mapper
+public interface RegistrationMapper {
+
+    /**
+      * 新增
+    */
+    int insert(Registration registration);
+
+    /**
+      * 删除
+    */
+    int deleteById(Integer id);
+
+    /**
+      * 修改
+    */
+    int updateById(Registration registration);
+
+    /**
+      * 根据ID查询
+    */
+    Registration selectById(Integer id);
+
+    /**
+      * 查询所有
+    */
+    List<Registration> selectAll(Registration registration);
+}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.RegistrationMapper">
+
+    <sql id="Base_Column_List">
+        id,user_id,room,price,status,medicine,hos_status
+    </sql>
+
+    <select id="selectAll" resultType="com.example.entity.Registration">
+        select registration.*, user.name as userName
+        from registration
+        left join user on registration.user_id = user.id
+        <where>
+            <if test="id != null"> and id= #{id}</if>
+            <if test="userId != null"> and user_id = #{userId}</if>
+            <if test="hosStatus != null"> and hos_status = #{hosStatus}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectById" resultType="com.example.entity.Registration">
+        select
+        <include refid="Base_Column_List" />
+        from registration
+        where id = #{id}
+    </select>
+
+    <delete id="deleteById">
+        delete from registration
+        where  id = #{id}
+    </delete>
+
+    <insert id="insert" parameterType="com.example.entity.Registration" useGeneratedKeys="true">
+        insert into registration
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="userId != null">user_id,</if>
+                <if test="room != null">room,</if>
+                <if test="price != null">price,</if>
+                <if test="status != null">status,</if>
+                <if test="medicine != null">medicine,</if>
+                <if test="hosStatus != null">hos_status,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id},</if>
+                <if test="userId != null">#{userId},</if>
+                <if test="room != null">#{room},</if>
+                <if test="price != null">#{price},</if>
+                <if test="status != null">#{status},</if>
+                <if test="medicine != null">#{medicine},</if>
+                <if test="hosStatus != null">#{hosStatus},</if>
+        </trim>
+    </insert>
+
+    <update id="updateById" parameterType="com.example.entity.Registration">
+        update registration
+        <set>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="room != null">
+                room = #{room},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="medicine != null">
+                medicine = #{medicine},
+            </if>
+            <if test="hosStatus != null">
+                hos_status = #{hosStatus},
+            </if>
+        </set>
+        where id = #{id} 
+    </update>
+
+</mapper>
+Service
+@Service
+public class RegistrationService {
+
+    @Resource
+    private RegistrationMapper registrationMapper;
+
+    /**
+     * 新增
+     */
+    public void add(Registration registration) {
+        // 判断该患者是否正在住院中，如果是，不需要生成一条新的住院记录，如果已出院或者没有住院记录，那么就生成一条新的住院记录
+        List<Registration> registrations = registrationMapper.selectAll(registration);
+        if (CollectionUtil.isEmpty(registrations)) {
+            registrationMapper.insert(registration);
+        }
+    }
+
+    /**
+     * 删除
+     */
+    public void deleteById(Integer id) {
+        registrationMapper.deleteById(id);
+    }
+
+    /**
+     * 批量删除
+     */
+    public void deleteBatch(List<Integer> ids) {
+        for (Integer id : ids) {
+            registrationMapper.deleteById(id);
+        }
+    }
+
+    /**
+     * 修改
+     */
+    public void updateById(Registration registration) {
+        registrationMapper.updateById(registration);
+    }
+
+    /**
+     * 根据ID查询
+     */
+    public Registration selectById(Integer id) {
+        return registrationMapper.selectById(id);
+    }
+
+    /**
+     * 查询所有
+     */
+    public List<Registration> selectAll(Registration registration) {
+        return registrationMapper.selectAll(registration);
+    }
+
+    /**
+     * 分页查询
+     */
+    public PageInfo<Registration> selectPage(Registration registration, Integer pageNum, Integer pageSize) {
+        Account currentUser = TokenUtils.getCurrentUser();
+        if (RoleEnum.USER.name().equals(currentUser.getRole())) {
+            registration.setUserId(currentUser.getId());
+        }
+        PageHelper.startPage(pageNum, pageSize);
+        List<Registration> list = registrationMapper.selectAll(registration);
+        return PageInfo.of(list);
+    }
+
+}
+Controller
+@RestController
+@RequestMapping("/registration")
+public class RegistrationController {
+
+    @Resource
+    private RegistrationService registrationService;
+
+    /**
+     * 新增
+     */
+    @PostMapping("/add")
+    public Result add(@RequestBody Registration registration) {
+        registrationService.add(registration);
+        return Result.success();
+    }
+
+    /**
+     * 删除
+     */
+    @DeleteMapping("/delete/{id}")
+    public Result deleteById(@PathVariable Integer id) {
+        registrationService.deleteById(id);
+        return Result.success();
+    }
+
+    /**
+     * 批量删除
+     */
+    @DeleteMapping("/delete/batch")
+    public Result deleteBatch(@RequestBody List<Integer> ids) {
+        registrationService.deleteBatch(ids);
+        return Result.success();
+    }
+
+    /**
+     * 修改
+     */
+    @PutMapping("/update")
+    public Result updateById(@RequestBody Registration registration) {
+        registrationService.updateById(registration);
+        return Result.success();
+    }
+
+    /**
+     * 根据ID查询
+     */
+    @GetMapping("/selectById/{id}")
+    public Result selectById(@PathVariable Integer id) {
+        Registration registration = registrationService.selectById(id);
+        return Result.success(registration);
+    }
+
+    /**
+     * 查询所有
+     */
+    @GetMapping("/selectAll")
+    public Result selectAll(Registration registration ) {
+        List<Registration> list = registrationService.selectAll(registration);
+        return Result.success(list);
+    }
+
+    /**
+     * 分页查询
+     */
+    @GetMapping("/selectPage")
+    public Result selectPage(Registration registration,
+                             @RequestParam(defaultValue = "1") Integer pageNum,
+                             @RequestParam(defaultValue = "10") Integer pageSize) {
+        PageInfo<Registration> page = registrationService.selectPage(registration, pageNum, pageSize);
+        return Result.success(page);
+    }
+
+}
+页面
+菜单：
+
+<el-menu-item index="/registration" v-if="user.role !== 'DOCTOR'">住院登记</el-menu-item>
+路由：
+
+{ path: 'registration', name: 'Registration', meta: { name: '住院登记' }, component: () => import('../views/manager/Registration') },
+页面：
+
+<template>
+  <div>
+    <div class="search">
+      <el-input placeholder="请输入标题查询" style="width: 200px" v-model="title"></el-input>
+      <el-button type="info" plain style="margin-left: 10px" @click="load(1)">查询</el-button>
+      <el-button type="warning" plain style="margin-left: 10px" @click="reset">重置</el-button>
+    </div>
+
+    <div class="table">
+      <el-table :data="tableData" stripe  @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center"></el-table-column>
+        <el-table-column prop="id" label="序号" width="80" align="center" sortable></el-table-column>
+        <el-table-column prop="userName" label="患者姓名" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="hosStatus" label="住院状态"></el-table-column>
+        <el-table-column prop="room" label="房号" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="price" label="费用"></el-table-column>
+        <el-table-column prop="status" label="缴费状态"></el-table-column>
+        <el-table-column prop="medicine" label="是否医保"></el-table-column>
+
+        <el-table-column label="操作" width="180" align="center">
+          <template v-slot="scope">
+            <el-button plain type="primary" @click="handleEdit(scope.row)" size="mini">编辑</el-button>
+            <el-button plain type="danger" size="mini" @click=del(scope.row.id)>删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination">
+        <el-pagination
+            background
+            @current-change="handleCurrentChange"
+            :current-page="pageNum"
+            :page-sizes="[5, 10, 20]"
+            :page-size="pageSize"
+            layout="total, prev, pager, next"
+            :total="total">
+        </el-pagination>
+      </div>
+    </div>
+
+
+    <el-dialog title="信息" :visible.sync="fromVisible" width="40%" :close-on-click-modal="false" destroy-on-close>
+      <el-form label-width="100px" style="padding-right: 50px" :model="form" :rules="rules" ref="formRef">
+        <el-form-item prop="room" label="房号">
+          <el-input v-model="form.room" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item prop="price" label="费用">
+          <el-input v-model="form.price" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item prop="status" label="缴费状态">
+          <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%;">
+            <el-option label="未交费" value="未交费"></el-option>
+            <el-option label="已缴费" value="已缴费"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="medicine" label="是否医保">
+          <el-select v-model="form.medicine" placeholder="请选择" style="width: 100%;">
+            <el-option label="是" value="是"></el-option>
+            <el-option label="否" value="否"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="hosStatus" label="住院状态">
+          <el-select v-model="form.hosStatus" placeholder="请选择状态" style="width: 100%;">
+            <el-option label="住院中" value="住院中"></el-option>
+            <el-option label="已出院" value="已出院"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="fromVisible = false">取 消</el-button>
+        <el-button type="primary" @click="save">确 定</el-button>
+      </div>
+    </el-dialog>
+
+
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Registration",
+  data() {
+    return {
+      tableData: [],  // 所有的数据
+      pageNum: 1,   // 当前的页码
+      pageSize: 10,  // 每页显示的个数
+      total: 0,
+      title: null,
+      fromVisible: false,
+      form: {},
+      user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
+      rules: {
+        title: [
+          {required: true, message: '请输入标题', trigger: 'blur'},
+        ],
+        content: [
+          {required: true, message: '请输入内容', trigger: 'blur'},
+        ]
+      },
+      ids: []
+    }
+  },
+  created() {
+    this.load(1)
+  },
+  methods: {
+    handleAdd() {   // 新增数据
+      this.form = {}  // 新增数据的时候清空数据
+      this.fromVisible = true   // 打开弹窗
+    },
+    handleEdit(row) {   // 编辑数据
+      this.form = JSON.parse(JSON.stringify(row))  // 给form对象赋值  注意要深拷贝数据
+      this.fromVisible = true   // 打开弹窗
+    },
+    save() {   // 保存按钮触发的逻辑  它会触发新增或者更新
+      this.$refs.formRef.validate((valid) => {
+        if (valid) {
+          this.$request({
+            url: this.form.id ? '/registration/update' : '/registration/add',
+            method: this.form.id ? 'PUT' : 'POST',
+            data: this.form
+          }).then(res => {
+            if (res.code === '200') {  // 表示成功保存
+              this.$message.success('保存成功')
+              this.load(1)
+              this.fromVisible = false
+            } else {
+              this.$message.error(res.msg)  // 弹出错误的信息
+            }
+          })
+        }
+      })
+    },
+    del(id) {   // 单个删除
+      this.$confirm('您确定删除吗？', '确认删除', {type: "warning"}).then(response => {
+        this.$request.delete('/registration/delete/' + id).then(res => {
+          if (res.code === '200') {   // 表示操作成功
+            this.$message.success('操作成功')
+            this.load(1)
+          } else {
+            this.$message.error(res.msg)  // 弹出错误的信息
+          }
+        })
+      }).catch(() => {
+      })
+    },
+    handleSelectionChange(rows) {   // 当前选中的所有的行数据
+      this.ids = rows.map(v => v.id)   //  [1,2]
+    },
+    delBatch() {   // 批量删除
+      if (!this.ids.length) {
+        this.$message.warning('请选择数据')
+        return
+      }
+      this.$confirm('您确定批量删除这些数据吗？', '确认删除', {type: "warning"}).then(response => {
+        this.$request.delete('/registration/delete/batch', {data: this.ids}).then(res => {
+          if (res.code === '200') {   // 表示操作成功
+            this.$message.success('操作成功')
+            this.load(1)
+          } else {
+            this.$message.error(res.msg)  // 弹出错误的信息
+          }
+        })
+      }).catch(() => {
+      })
+    },
+    load(pageNum) {  // 分页查询
+      if (pageNum) this.pageNum = pageNum
+      this.$request.get('/registration/selectPage', {
+        params: {
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
+          title: this.title,
+        }
+      }).then(res => {
+        this.tableData = res.data?.list
+        this.total = res.data?.total
+      })
+    },
+    reset() {
+      this.title = null
+      this.load(1)
+    },
+    handleCurrentChange(pageNum) {
+      this.load(pageNum)
+    },
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
