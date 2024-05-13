@@ -3,7 +3,7 @@ package com.example.entity;
 
 import java.io.Serializable;
 
-public class Doctor  implements Serializable {
+public class Doctor  extends Account implements Serializable {
     private static final long serialVersionUID = 1L;
     private Integer id;
     /** 用户名 */

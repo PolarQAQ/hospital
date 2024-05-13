@@ -1,6 +1,6 @@
 package com.example.entity;
 
-public class User {
+public class User extends Account {
     private static final long serialVersionUID = 1L;
 
     public Integer getId() {
@@ -92,6 +92,8 @@ public class User {
     }
 
     /** ID */
+
+
     private Integer id;
     /** 用户名 */
     private String username;
