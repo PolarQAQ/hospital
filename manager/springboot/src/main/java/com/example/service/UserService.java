@@ -23,7 +23,7 @@ public class UserService {
     @Resource
     private UserMapper userMapper;
 
-    public Account login(Account account) {
+    public Account  login(Account account) {
         Account dbUser = userMapper.selectByUsername(account.getUsername());
         if (ObjectUtil.isNull(dbUser)) {
             throw new CustomException(ResultCodeEnum.USER_NOT_EXIST_ERROR);
@@ -82,7 +82,16 @@ public class UserService {
      * 根据ID查询
      */
     public User selectById(Integer id) {
-        return userMapper.selectById(id);
+
+        User dbUser = userMapper.selectById(id);
+        /*
+        生成token
+         */
+        String tokenData = dbUser.getId() + "-" + RoleEnum.USER.name();
+        String token = TokenUtils.createToken(tokenData, dbUser.getPassword());
+        dbUser.setToken(token);
+        return dbUser;
+
     }
 
     /**
@@ -107,5 +116,17 @@ public class UserService {
         User user = new User();
         BeanUtils.copyProperties(account, user);
         add(user);
+    }
+
+    public void updatePassword(Account account) {
+        User dbUser = userMapper.selectByUsername(account.getUsername());
+        if (ObjectUtil.isNull(dbUser)) {
+            throw new CustomException(ResultCodeEnum.USER_NOT_EXIST_ERROR);
+        }
+        if (!account.getPassword().equals(dbUser.getPassword())) {
+            throw new CustomException(ResultCodeEnum.PARAM_PASSWORD_ERROR);
+        }
+        dbUser.setPassword(account.getNewPassword());
+        userMapper.updateById(dbUser);
     }
 }

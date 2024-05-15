@@ -1,4 +1,5 @@
- <div class="container">
+<template>
+  <div class="container">
     <div style="width: 400px; padding: 30px; background-color: white; border-radius: 5px;">
       <div style="text-align: center; font-size: 20px; margin-bottom: 20px; color: #333">欢迎使用医院预约挂号系统</div>
       <el-form :model="form" :rules="rules" ref="formRef">
@@ -10,9 +11,9 @@
         </el-form-item>
         <el-form-item>
           <el-select v-model="form.role" placeholder="请选择角色" style="width: 100%;">
-            <el-option label="管理员" value="ADMIN"></el-option>
+            <el-option label="用户" value="USER"></el-option>
             <el-option label="医生" value="DOCTOR"></el-option>
-            <el-option label="患者" value="USER"></el-option>
+            <el-option label="管理员" value="ADMIN"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -34,7 +35,7 @@ export default {
   name: "Login",
   data() {
     return {
-      form: { role: 'ADMIN' },
+      form: { role: 'USER' },
       rules: {
         username: [
           { required: true, message: '请输入账号', trigger: 'blur' },

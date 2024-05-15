@@ -3,28 +3,52 @@ package com.example.entity;
 
 import java.io.Serializable;
 
-public class Doctor  extends Account implements Serializable {
+public class Doctor extends Account implements Serializable {
     private static final long serialVersionUID = 1L;
     private Integer id;
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     private String username;
-    /** 名称 */
+    /**
+     * 名称
+     */
     private String name;
-    /** 密码 */
+    /**
+     * 密码
+     */
     private String password;
-    /** 角色标识 */
+    /**
+     * 角色标识
+     */
     private String role;
-    /** 新密码 */
+    /**
+     * 新密码
+     */
     private String newPassword;
-    /** 头像 */
+    /**
+     * 头像
+     */
     private String avatar;
 
     private String token;
-    /** ID */
+    /**
+     * ID
+     */
+    private Integer num;
 
+    public Integer getNum() {
+        return num;
+    }
+
+    public void setNum(Integer num) {
+        this.num = num;
+    }
 
     private String phone;
-    /** 邮箱 */
+    /**
+     * 邮箱
+     */
     private String email;
 
     public Integer getId() {
@@ -155,7 +179,9 @@ public class Doctor  extends Account implements Serializable {
         this.departmentName = departmentName;
     }
 
-    /** 头像 */
+    /**
+     * 头像
+     */
 
     private String description;
     private Double price;
@@ -164,4 +190,14 @@ public class Doctor  extends Account implements Serializable {
     private Integer departmentId;
 
     private String departmentName;
+
+    private String week;
+
+    public String getWeek() {
+        return week;
+    }
+
+    public void setWeek(String week) {
+        this.week = week;
+    }
 }

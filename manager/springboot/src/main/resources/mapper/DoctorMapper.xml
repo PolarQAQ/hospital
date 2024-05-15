@@ -12,28 +12,36 @@
         select doctor.*, department.name as departmentName
         from doctor
         left join department on doctor.department_id = department.id
+        left join plan on plan.doctor_id=doctor.id
         <where>
-            <if test="id != null"> and doctor.id= #{id}</if>
-            <if test="username != null"> and username like concat('%', #{username}, '%')</if>
-            <if test="password != null"> and password= #{password}</if>
-            <if test="name != null"> and doctor.name= #{name}</if>
-            <if test="phone != null"> and phone= #{phone}</if>
-            <if test="email != null"> and email= #{email}</if>
-            <if test="avatar != null"> and avatar= #{avatar}</if>
-            <if test="role != null"> and role= #{role}</if>
+            <if test="id != null">and doctor.id= #{id}</if>
+            <if test="username != null">and username like concat('%', #{username}, '%')</if>
+            <if test="password != null">and password= #{password}</if>
+            <if test="name != null">and doctor.name= #{name}</if>
+            <if test="phone != null">and phone= #{phone}</if>
+            <if test="email != null">and email= #{email}</if>
+            <if test="avatar != null">and avatar= #{avatar}</if>
+            <if test="role != null">and role= #{role}</if>
+            <if test="week != null">
+                and week like concat('%',#{week},'%')
+            </if>
+            <if test="departmentId != null">
+                and department_id=#{departmentId}
+            </if>
         </where>
     </select>
 
     <select id="selectById" resultType="com.example.entity.Doctor">
         select
-        <include refid="Base_Column_List" />
+        <include refid="Base_Column_List"/>
         from doctor
         where id = #{id}
     </select>
 
     <delete id="deleteById">
-        delete from doctor
-        where  id = #{id}
+        delete
+        from doctor
+        where id = #{id}
     </delete>
 
     <insert id="insert" parameterType="com.example.entity.Doctor" useGeneratedKeys="true">

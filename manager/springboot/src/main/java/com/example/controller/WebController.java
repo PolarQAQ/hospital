@@ -83,6 +83,12 @@ public class WebController {
         if (RoleEnum.ADMIN.name().equals(account.getRole())) {
             adminService.updatePassword(account);
         }
+        if (RoleEnum.DOCTOR.name().equals(account.getRole())) {
+            doctorService.updatePassword(account);
+        }
+        if (RoleEnum.USER.name().equals(account.getRole())) {
+            userService.updatePassword(account);
+        }
         return Result.success();
     }
 

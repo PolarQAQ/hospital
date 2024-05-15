@@ -29,17 +29,15 @@ public class TokenUtils {
 
     private static final Logger log = LoggerFactory.getLogger(TokenUtils.class);
 
-    private static AdminService staticAdminService;
-
+    @Resource
+    UserService userService;
     @Resource
     AdminService adminService;
     @Resource
     DoctorService doctorService;
-    @Resource
-    UserService userService;
-
     private static DoctorService staticDoctorService;
     private static UserService staticUserService;
+    private static AdminService staticAdminService;
 
     @PostConstruct
     public void setUserService() {
@@ -71,7 +69,6 @@ public class TokenUtils {
                 if (RoleEnum.ADMIN.name().equals(role)) {
                     return staticAdminService.selectById(Integer.valueOf(userId));
                 }
-
                 if(RoleEnum.DOCTOR.name().equals(role)) {
                    return staticDoctorService.selectById(Integer.valueOf(userId));
                 }

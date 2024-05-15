@@ -34,4 +34,5 @@ public interface DoctorMapper {
 
     @Select("select * from doctor where username = #{username}")
     Doctor selectByUsername(String username);
+
 }

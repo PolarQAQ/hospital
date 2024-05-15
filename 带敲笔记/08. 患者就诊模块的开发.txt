@@ -27,7 +27,7 @@ public class Record implements Serializable {
 
 }
 Mapper
-public interface ReserveMapper {
+public interface RecordMapper {
 
     /**
       * 新增

@@ -9,9 +9,11 @@ import com.example.common.Constants;
 import com.example.common.enums.ResultCodeEnum;
 import com.example.common.enums.RoleEnum;
 import com.example.entity.Account;
+import com.example.entity.User;
 import com.example.exception.CustomException;
 import com.example.service.AdminService;
 import com.example.service.DoctorService;
+import com.example.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -31,6 +33,9 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Resource
     private AdminService adminService;
+
+    @Resource
+    private UserService userService;
 
     @Resource
     private DoctorService doctorService;
@@ -61,7 +66,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                 account = doctorService.selectById(Integer.valueOf(userId));
             }
             if(RoleEnum.USER.name().equals(role)) {
-                account = doctorService.selectById(Integer.valueOf(userId));
+                account = userService.selectById(Integer.valueOf(userId));
             }
         } catch (Exception e) {
             throw new CustomException(ResultCodeEnum.TOKEN_CHECK_ERROR);

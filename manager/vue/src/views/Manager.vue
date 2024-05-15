@@ -3,7 +3,7 @@
     <!--  头部  -->
     <div class="manager-header">
       <div class="manager-header-left">
-        <img src="@/assets/imgs/logo.png" />
+        <img src="@/assets/imgs/logo.png"/>
         <div class="title">后台管理系统</div>
       </div>
 
@@ -17,8 +17,8 @@
       <div class="manager-header-right">
         <el-dropdown placement="bottom">
           <div class="avatar">
-            <img :src="user.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
-            <div>{{ user.name ||  '管理员' }}</div>
+            <img :src="user.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"/>
+            <div>{{ user.name || '管理员' }}</div>
           </div>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item @click.native="goToPerson">个人信息</el-dropdown-item>
@@ -42,24 +42,31 @@
             <template slot="title">
               <i class="el-icon-menu"></i><span>信息管理</span>
             </template>
-            <el-menu-item index="/notice">公告信息</el-menu-item>
-            <el-menu-item index="/department">科室信息</el-menu-item>
-            <el-menu-item index="/doctor">医生信息</el-menu-item>
-            <el-menu-item index="/user">患者信息</el-menu-item>
+            <el-menu-item index="/notice" v-if="user.role === 'ADMIN'">公告信息</el-menu-item>
+            <el-menu-item index="/department" v-if="user.role === 'ADMIN'">科室信息</el-menu-item>
+
+            <el-menu-item index="/plan">医生排班</el-menu-item>
+            <el-menu-item index="/doctorCard">预约挂号</el-menu-item>
+            <el-menu-item index="/reserve">患者挂号</el-menu-item>
+            <el-menu-item index="/record" v-if="user.role === 'DOCTOR'">我的就诊</el-menu-item>
+            <el-menu-item index="/record" v-if="user.role === 'ADMIN'">病例管理</el-menu-item>
+            <el-menu-item index="/registration" v-if="user.role!=='DOCTOR'">住院登记</el-menu-item>
           </el-submenu>
 
-          <el-submenu index="user">
+          <el-submenu index="user" v-if="user.role === 'ADMIN'">
             <template slot="title">
               <i class="el-icon-menu"></i><span>用户管理</span>
             </template>
-            <el-menu-item index="/admin">管理员信息</el-menu-item>
+            <el-menu-item index="/doctor" v-if="user.role === 'ADMIN'">医生信息</el-menu-item>
+            <el-menu-item index="/user" v-if="user.role === 'ADMIN'">患者信息</el-menu-item>
+            <el-menu-item index="/admin" v-if="user.role==='ADMIN'">管理员信息</el-menu-item>
           </el-submenu>
         </el-menu>
       </div>
 
       <!--  数据表格  -->
       <div class="manager-main-right">
-        <router-view @update:user="updateUser" />
+        <router-view @update:user="updateUser"/>
       </div>
     </div>
 
@@ -86,6 +93,12 @@ export default {
     goToPerson() {
       if (this.user.role === 'ADMIN') {
         this.$router.push('/adminPerson')
+      }
+      if (this.user.role === 'DOCTOR') {
+        this.$router.push('/doctorPerson')
+      }
+      if (this.user.role === 'USER') {
+        this.$router.push('/userPerson')
       }
     },
     logout() {
