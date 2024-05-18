@@ -29,6 +29,7 @@
                 and department_id=#{departmentId}
             </if>
         </where>
+        group by doctor.id
     </select>
 
     <select id="selectById" resultType="com.example.entity.Doctor">

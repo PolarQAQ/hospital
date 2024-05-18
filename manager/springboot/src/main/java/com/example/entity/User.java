@@ -1,6 +1,8 @@
 package com.example.entity;
 
-public class User extends Account {
+import java.io.Serializable;
+
+public class User extends Account implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public Integer getId() {
@@ -92,8 +94,6 @@ public class User extends Account {
     }
 
     /** ID */
-
-
     private Integer id;
     /** 用户名 */
     private String username;

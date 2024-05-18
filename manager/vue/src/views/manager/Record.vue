@@ -27,13 +27,15 @@
         </el-table-column>
         <el-table-column prop="inhostpitalRecord" label="是否住院登记"></el-table-column>
 
-        <el-table-column label="操作" width="180" align="center">
+        <el-table-column label="操作" width="180" align="center" v-if="user.role!=='USER'">
           <template v-slot="scope">
             <el-button plain type="primary" v-if="user.role==='DOCTOR'" @click="handleEdit(scope.row)" size="mini">
               填写医嘱病历
             </el-button>
             <el-button plain type="primary" v-if="user.role==='ADMIN' && scope.row.inhospital
 ==='是' && scope.row.inhostpitalRecord==='否'" @click="Registration(scope.row)" size="mini">住院登记
+            </el-button>
+            <el-button plain type="primary" @click="del(scope.row)" size="mini">删除
             </el-button>
           </template>
         </el-table-column>
@@ -59,7 +61,7 @@
           </div>
         </el-form-item>
         <el-form-itme prop="inhospital" label="是否住院">
-          <el-select v-model="form.inhospital" placeholder="请选择" style="width: 100%;">
+          <el-select v-model="form.inhospital" placeholder="请选择是否住院" style="width: 100%;">
             <el-option label="是" value="是"></el-option>
             <el-option label="否" value="否"></el-option>
           </el-select>
@@ -177,9 +179,14 @@ export default {
         }
       })
     },
-    del(id) {   // 单个删除
+    del(row) {   // 单个删除
+     if(this.user.role!=='ADMIN' && row.inhospital
+          !=='是' && row.inhostpitalRecord==='否') {
+       this.$message.warning("您无法删除未登记或未确定的记录")
+       return
+     }
       this.$confirm('您确定删除吗？', '确认删除', {type: "warning"}).then(response => {
-        this.$request.delete('/record/delete/' + id).then(res => {
+        this.$request.delete('/record/delete/' + row.id).then(res => {
           if (res.code === '200') {   // 表示操作成功
             this.$message.success('操作成功')
             this.load(1)

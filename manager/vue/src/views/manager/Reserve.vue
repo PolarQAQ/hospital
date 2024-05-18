@@ -6,19 +6,34 @@
       <el-button type="warning" plain style="margin-left: 10px" @click="reset">重置</el-button>
     </div>
 
+    <div class="operation" v-if="user.role==='ADMIN'">
+      <!--      <el-button type="primary" plain @click="handleAdd">新增</el-button>-->
+      <el-button type="danger" plain @click="delBatch">批量删除</el-button>
+    </div>
+
     <div class="table">
       <el-table :data="tableData" stripe>
+
+        <el-table-column type="selection" width="40" align="center"
+                         v-if="user.role==='ADMIN' && status==='已叫号'"></el-table-column>
+
         <el-table-column prop="id" label="序号" width="80" align="center" sortable></el-table-column>
         <el-table-column prop="userName" label="患者姓名" show-overflow-tooltip></el-table-column>
         <el-table-column prop="doctorName" label="医生姓名" show-overflow-tooltip></el-table-column>
         <el-table-column prop="time" label="挂号时间"></el-table-column>
         <el-table-column prop="status" label="挂号状态"></el-table-column>
 
-        <el-table-column label="操作" width="180" v-if="user.role !== 'ADMIN'" align="center">
+        <el-table-column label="操作" width="180" align="center">
           <template v-slot="scope">
-            <el-button plain type="danger" size="mini" v-if="scope.row.status === '未叫号' && user.role === 'USER'" @click=del(scope.row.id)>取消挂号</el-button>
-            <el-button plain type="warning" size="mini" v-if="user.role === 'DOCTOR'" @click=call(scope.row)>叫号</el-button>
+            <el-button plain type="danger" size="mini" v-if="user.role === 'USER'"
+                       @click=del(scope.row)>取消挂号
+            </el-button>
+            <el-button plain type="warning" size="mini" v-if="user.role === 'DOCTOR'" @click=call(scope.row)>叫号
+            </el-button>
+            <el-button plain type="danger" size="mini" v-if="user.role!=='USER'" @click=del(scope.row)>删除记录
+            </el-button>
           </template>
+
         </el-table-column>
       </el-table>
 
@@ -38,6 +53,7 @@
 </template>
 
 <script>
+
 export default {
   name: "Reserve",
   data() {
@@ -83,9 +99,31 @@ export default {
         }
       })
     },
-    del(id) {   // 单个删除
-      this.$confirm('您确定取消挂号吗?', '操作确认', {type: "warning"}).then(response => {
-        this.$request.delete('/reserve/delete/' + id).then(res => {
+    del(row) {   // 单个删除
+      if (row.status === '未叫号' && this.user.role!=='USER') {
+        this.$message.warning("您无法删除未叫号的患者")
+        return
+      }
+      if (this.user.role === 'USER') {
+        if(row.status === '已叫号') {
+          this.$message.warning("已叫号，无法取消")
+          return
+        }
+        this.$confirm('您确定取消挂号么', '操作确认', {type: "warning"}).then(response => {
+          this.$request.delete('/reserve/delete/' + row.id).then(res => {
+            if (res.code === '200') {   // 表示操作成功
+              this.$message.success('操作成功')
+              this.load(1)
+            } else {
+              this.$message.error(res.msg)  // 弹出错误的信息
+            }
+          })
+        }).catch(() => {
+        })
+        return
+      }
+      this.$confirm('确定删除么，删除后无法恢复，请谨慎操作', '操作确认', {type: "warning"}).then(response => {
+        this.$request.delete('/reserve/delete/' + row.id).then(res => {
           if (res.code === '200') {   // 表示操作成功
             this.$message.success('操作成功')
             this.load(1)

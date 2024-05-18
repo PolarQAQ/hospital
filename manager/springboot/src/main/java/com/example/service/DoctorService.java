@@ -47,7 +47,10 @@ public class DoctorService {
         if (!account.getPassword().equals(dbDoctor.getPassword())) {
             throw new CustomException(ResultCodeEnum.USER_ACCOUNT_ERROR);
         }
-        // 生成token
+
+        /**
+         * 将用户id和用户的role作为data放进token中，后面可以通过token获取当前用户的role
+         */
         String tokenData = dbDoctor.getId() + "-" + RoleEnum.DOCTOR.name();
         String token = TokenUtils.createToken(tokenData, dbDoctor.getPassword());
         dbDoctor.setToken(token);
@@ -88,6 +91,10 @@ public class DoctorService {
         }
     }
 
+    /**
+     * 获取当前星期数
+     * @return
+     */
     private String getTodayWeek() {
         LocalDate today = LocalDate.now();
         DayOfWeek dayOfWeek = today.getDayOfWeek();

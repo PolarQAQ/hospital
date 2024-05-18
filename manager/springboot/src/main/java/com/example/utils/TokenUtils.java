@@ -20,6 +20,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Token工具类
@@ -39,6 +40,9 @@ public class TokenUtils {
     private static UserService staticUserService;
     private static AdminService staticAdminService;
 
+    /*
+    PostConstruct 注释用于在依赖关系注入完成之后需要执行的方法上，以执行任何初始化。
+     */
     @PostConstruct
     public void setUserService() {
         staticAdminService = adminService;
@@ -48,10 +52,32 @@ public class TokenUtils {
 
     /**
      * 生成token
+     * 通常token包含以下内容
+     * header {
+     *     "alg":"HMAC256",//加密算法
+     *     "typ":"JWT",//token类型
+     * }
+     *
+     * JWT的第二部分是payload，它包含声明（要求）。声明是关于实体(通常是用户信息，也就是程序员放入token中的数据)和其他数据的声明。声明有三种类型: registered, public 和 private。
+     * Registered claims : 这里有一组预定义的声明，它们不是强制的，但是推荐。比如：iss (issuer), exp (expiration time), sub (subject), aud (audience)等。
+     * Public claims : 可以随意定义。
+     * Private claims : 用于在同意使用它们的各方之间共享信息，并且不是注册的或公开的声明。
+     *
+     * Payload {
+     *    1-DOCTOR
+     * }
+     *
+     * Signature:自己定义的内容
+     * sign {
+     *
+     * }
      */
     public static String createToken(String data, String sign) {
-        return JWT.create().withAudience(data) // 将 userId-role 保存到 token 里面,作为载荷
-                .withExpiresAt(DateUtil.offsetHour(new Date(), 2)) // 2小时后token过期
+        return JWT.create().withAudience(data) // 将 userId-role 保存到 token 里面,作为载荷中的audience
+                /**
+                 * 偏移时间
+                 */
+                .withExpiresAt(DateUtil.offsetHour(new Date(), 24)) // 24小时后token过期
                 .sign(Algorithm.HMAC256(sign)); // 以 password 作为 token 的密钥
     }
 
@@ -59,13 +85,26 @@ public class TokenUtils {
      * 获取当前登录的用户信息
      */
     public static Account getCurrentUser() {
+
         try {
-            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
             String token = request.getHeader(Constants.TOKEN);
+
+            log.info("解析的token" + token);
+
             if (ObjectUtil.isNotEmpty(token)) {
+
+                /**
+                 * token中的data包含id和role的内容
+                 */
                 String userRole = JWT.decode(token).getAudience().get(0);
+                log.info("从token中获取信息" + userRole);
                 String userId = userRole.split("-")[0];  // 获取用户id
                 String role = userRole.split("-")[1];    // 获取角色
+
+                /**
+                 * 返回一个Account对象，对象中含有role属性，从而获取当前的用户的身份
+                 */
                 if (RoleEnum.ADMIN.name().equals(role)) {
                     return staticAdminService.selectById(Integer.valueOf(userId));
                 }

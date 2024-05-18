@@ -23,6 +23,11 @@ public class UserService {
     @Resource
     private UserMapper userMapper;
 
+    /**
+     * 返回的Account中包含token信息
+     * @param account 传入username和password和role
+     * @return 如果找到用户则返回token
+     */
     public Account  login(Account account) {
         Account dbUser = userMapper.selectByUsername(account.getUsername());
         if (ObjectUtil.isNull(dbUser)) {
@@ -43,12 +48,16 @@ public class UserService {
      */
     public void add(User user) {
         User dbUser = userMapper.selectByUsername(user.getUsername());
+       /*
+       用户不能重复，且默认密码为123，所以用户名不能重复
+        */
         if (ObjectUtil.isNotNull(dbUser)) {
             throw new CustomException(ResultCodeEnum.USER_EXIST_ERROR);
         }
         if (ObjectUtil.isEmpty(user.getPassword())) {
             user.setPassword(Constants.USER_DEFAULT_PASSWORD);
         }
+        //如果name为空则将username作为name
         if (ObjectUtil.isEmpty(user.getName())) {
             user.setName(user.getUsername());
         }
@@ -109,11 +118,17 @@ public class UserService {
         List<User> list = userMapper.selectAll(user);
         return PageInfo.of(list);
     }
-    /*
-    注册
+
+    /**
+     * 注册
+     * @param account
      */
     public void register(Account account) {
         User user = new User();
+        /**
+         * 将account复制给user
+         * 在org.springframework.beans.BeanUtils包下的copyProperties第一个参数是被copy的对象，而org.apache.commons.beanutils.BeanUtils中是第二个参数，所以使用时不要弄混。
+         */
         BeanUtils.copyProperties(account, user);
         add(user);
     }

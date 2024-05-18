@@ -48,7 +48,7 @@
             <el-menu-item index="/plan">医生排班</el-menu-item>
             <el-menu-item index="/doctorCard">预约挂号</el-menu-item>
             <el-menu-item index="/reserve">患者挂号</el-menu-item>
-            <el-menu-item index="/record" v-if="user.role === 'DOCTOR'">我的就诊</el-menu-item>
+            <el-menu-item index="/record" v-if="user.role!=='ADMIN'">我的就诊</el-menu-item>
             <el-menu-item index="/record" v-if="user.role === 'ADMIN'">病例管理</el-menu-item>
             <el-menu-item index="/registration" v-if="user.role!=='DOCTOR'">住院登记</el-menu-item>
           </el-submenu>

@@ -37,7 +37,13 @@ public class WebController {
      * 登录
      */
     @PostMapping("/login")
+    /*
+    从前端接受用户和密码，将其封装在account中
+     */
     public Result login(@RequestBody Account account) {
+        /*
+        如果username或password或role为空则直接返回错误信息
+         */
         if (ObjectUtil.isEmpty(account.getUsername()) || ObjectUtil.isEmpty(account.getPassword())
                 || ObjectUtil.isEmpty(account.getRole())) {
             return Result.error(ResultCodeEnum.PARAM_LOST_ERROR);

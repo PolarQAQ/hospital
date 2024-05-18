@@ -17,8 +17,8 @@
         <el-table-column prop="medicine" label="是否医保"></el-table-column>
         <el-table-column label="操作" width="180" v-if="user.role=== 'ADMIN'" align="center">
           <template v-slot="scope">
-            <el-button plain type="primary" @click="handleEdit(scope.row)" size="mini"  v-if="scope.row.hosStatus==='住院中'">编辑</el-button>
-            <el-button plain type="danger" size="mini" v-if="scope.row.hosStatus==='已出院'" @click=del(scope.row.id)>删除</el-button>
+            <el-button plain type="primary" @click="handleEdit(scope.row)" size="mini"  v-if="scope.row.hosStatus==='住院中' || scope.row.status==='未交费'">编辑</el-button>
+            <el-button plain type="danger" size="mini" v-if="scope.row.hosStatus==='已出院'" @click=del(scope.row)>删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -128,9 +128,13 @@ export default {
         }
       })
     },
-    del(id) {   // 单个删除
+    del(row) {   // 单个删除
+      if(row.status === '未交费') {
+        this.$message.warning("您无法删除未缴费的记录")
+        return
+      }
       this.$confirm('您确定删除吗？', '确认删除', {type: "warning"}).then(response => {
-        this.$request.delete('/registration/delete/' + id).then(res => {
+        this.$request.delete('/registration/delete/' + row.id).then(res => {
           if (res.code === '200') {   // 表示操作成功
             this.$message.success('操作成功')
             this.load(1)

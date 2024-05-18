@@ -12,23 +12,32 @@
     </div>
 
     <div class="table">
-      <el-table :data="tableData" stripe  @selection-change="handleSelectionChange">
+      <el-table :data="tableData" stripe @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" v-if="user.role==='ADMIN'"></el-table-column>
-        <el-table-column prop="id" label="序号" v-if="user.role==='ADMIN'" width="80" align="center" sortable></el-table-column>
-        <el-table-column prop="id" label="序号" v-if="user.role!=='ADMIN'" width="250" align="center" sortable></el-table-column>
-
-        <el-table-column prop="doctorName" v-if="user.role==='ADMIN'" label="医生姓名" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="doctorName" v-if="user.role!=='ADMIN'" width="300" align="center"  label="医生姓名" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="departmentName" v-if="user.role==='ADMIN'"label="科室" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="departmentName" v-if="user.role!=='ADMIN'" width="300" align="center" label="科室" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="num" v-if="user.role==='ADMIN'"  label="就诊数量"></el-table-column>
-        <el-table-column prop="num" v-if="user.role!=='ADMIN'" width="300" align="center" label="就诊数量"></el-table-column>
+        <el-table-column prop="id" label="序号" v-if="user.role==='ADMIN'" width="80" align="center"
+                         sortable></el-table-column>
+        <el-table-column prop="id" label="序号" v-if="user.role!=='ADMIN'" width="250" align="center"
+                         sortable></el-table-column>
+        <el-table-column prop="doctorName" v-if="user.role==='ADMIN'" label="医生姓名"
+                         show-overflow-tooltip></el-table-column>
+        <el-table-column prop="doctorName" v-if="user.role!=='ADMIN'" width="300" align="center" label="医生姓名"
+                         show-overflow-tooltip></el-table-column>
+        <el-table-column prop="departmentName" v-if="user.role==='ADMIN'" label="科室"
+                         show-overflow-tooltip></el-table-column>
+        <el-table-column prop="departmentName" v-if="user.role!=='ADMIN'" width="300" align="center" label="科室"
+                         show-overflow-tooltip></el-table-column>
+        <el-table-column prop="num" v-if="user.role==='ADMIN'" label="就诊数量"></el-table-column>
+        <el-table-column prop="num" v-if="user.role!=='ADMIN'" width="300" align="center"
+                         label="就诊数量"></el-table-column>
         <el-table-column prop="week" v-if="user.role==='ADMIN'" label="周几"></el-table-column>
-        <el-table-column prop="week" v-if="user.role!=='ADMIN'" width="300" align="center" label="周几"></el-table-column>
+        <el-table-column prop="week" v-if="user.role!=='ADMIN'" width="300" align="center"
+                         label="周几"></el-table-column>
         <el-table-column label="操作" width="180" align="center" v-if="user.role==='ADMIN'">
           <template v-slot="scope">
-            <el-button plain type="primary" @click="handleEdit(scope.row)" size="mini" v-if="user.role==='ADMIN'">编辑</el-button>
-            <el-button plain type="danger" size="mini" @click=del(scope.row.id) v-if="user.role==='ADMIN'">删除</el-button>
+            <el-button plain type="primary" @click="handleEdit(scope.row)" size="mini" v-if="user.role==='ADMIN'">编辑
+            </el-button>
+            <el-button plain type="danger" size="mini" @click=del(scope.row.id) v-if="user.role==='ADMIN'">删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -51,7 +60,8 @@
       <el-form label-width="100px" style="padding-right: 50px" :model="form" :rules="rules" ref="formRef">
         <el-form-item prop="doctorId" label="选择医生">
           <el-select v-model="form.doctorId" placeholder="请选择医生" style="width: 100%">
-            <el-option v-for="item in doctorData" :key="item.id" :label="item.name + ' - ' + item.departmentName" :value="item.id"></el-option>
+            <el-option v-for="item in doctorData" :key="item.id" :label="item.name + ' - ' + item.departmentName"
+                       :value="item.id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item prop="num" label="看病人数">

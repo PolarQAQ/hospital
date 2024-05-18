@@ -13,8 +13,8 @@
 
     <div class="table">
       <el-table :data="tableData" strip @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" align="center"></el-table-column>
-        <el-table-column prop="id" label="序号" width="70" align="center" sortable></el-table-column>
+        <el-table-column type="selection" width="40" align="center"></el-table-column>
+        <el-table-column prop="id" label="序号" width="50" align="center" sortable></el-table-column>
         <el-table-column label="头像">
           <template v-slot="scope">
             <div style="display: flex; align-items: center">
@@ -27,11 +27,11 @@
         <el-table-column prop="name" label="姓名"></el-table-column>
         <el-table-column prop="description" label="医生介绍" show-overflow-tooltip></el-table-column>
         <el-table-column prop="departmentName" label="科室"></el-table-column>
-        <el-table-column prop="price" label="挂号费"></el-table-column>
+        <el-table-column prop="price" width="60" label="挂号费"></el-table-column>
         <el-table-column prop="phone" label="电话" show-overflow-tooltip></el-table-column>
         <el-table-column prop="email" label="邮箱" show-overflow-tooltip></el-table-column>
         <el-table-column prop="role" label="角色"></el-table-column>
-        <el-table-column prop="time" label="入职时间"></el-table-column>
+        <el-table-column prop="time" width="90" label="入职时间"></el-table-column>
         <el-table-column prop="position" label="职位"></el-table-column>
         <el-table-column label="操作" align="center" width="180">
           <template v-slot="scope">
