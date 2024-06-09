@@ -90,7 +90,7 @@ public class TokenUtils {
             HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
             String token = request.getHeader(Constants.TOKEN);
 
-            log.info("解析的token" + token);
+//            log.info("解析的token" + token);
 
             if (ObjectUtil.isNotEmpty(token)) {
 

@@ -38,6 +38,10 @@
 
     <insert id="insert" parameterType="com.example.entity.Admin" useGeneratedKeys="true">
         insert into admin
+#             prefix:给sql拼接的前缀
+#             suffix:给sql拼接后缀
+#             prefixOverrides:去除sql前面的关键字或字符，该关键字或字符由prefixOverride指定
+#             suffixOverrides:去除sql后面的关键字或字符，该关键字或字符由suffixOverrides指定
         <trim prefix="(" suffix=")" suffixOverrides=",">
                 <if test="id != null">id,</if>
                 <if test="username != null">username,</if>
