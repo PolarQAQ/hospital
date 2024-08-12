@@ -2,10 +2,22 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
+-- create database
+-- ----------------------------
+
+create database if not exists manager;
+
+-- ----------------------------
 -- Table structure for admin
 -- ----------------------------
-DROP TABLE IF EXISTS `admin`;
-CREATE TABLE `admin`  (
+
+use manager;
+
+-- ----------------------------
+-- Table structure for admin
+-- ----------------------------
+
+CREATE TABLE if not exists `admin`  (
   `id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '用户名',
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '密码',
@@ -20,13 +32,14 @@ CREATE TABLE `admin`  (
 -- ----------------------------
 -- Records of admin
 -- ----------------------------
+
 INSERT INTO `admin` VALUES (1, 'admin', 'admin', '管理员', 'http://localhost:9090/files/1697438073596-avatar.png','ADMIN', '13677889922', 'admin@xm.com');
 
 -- ----------------------------
 -- Table structure for notice
 -- ----------------------------
-DROP TABLE IF EXISTS `notice`;
-CREATE TABLE `notice`  (
+
+CREATE TABLE if not exists `notice`  (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '标题',
   `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '内容',
@@ -38,21 +51,33 @@ CREATE TABLE `notice`  (
 -- ----------------------------
 -- Records of notice
 -- ----------------------------
+
 INSERT INTO `notice` VALUES (1, '系统正式运行成功', '今天系统正式运行成功，后续会不断改进', '20234-05-05', 'admin');
 INSERT INTO `notice` VALUES (2, '所有功能都已完成，可以正常使用', '所有功能都已完成，可以正常使用', '2024-05-05', 'admin');
 INSERT INTO `notice` VALUES (3, '医院领导慰问基层工作人员', '正值流感多发期，医院领导慰问基层工作人员', '2023-05-05', 'admin');
 
+-- ----------------------------
+-- FOREIGN_KEY
+-- ----------------------------
+
 SET FOREIGN_KEY_CHECKS = 1;
 
-CREATE TABLE `department` (
+-- ----------------------------
+-- Table structure for department
+-- ----------------------------
+
+CREATE TABLE if not exists `department` (
                               `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                               `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '科室名称',
                               `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '科室描述',
                               PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '科室信息表';
 
+-- ----------------------------
+-- Table structure for doctor
+-- ----------------------------
 
-CREATE TABLE `doctor` (
+CREATE TABLE if not exists `doctor` (
                           `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                           `username` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '用户名',
                           `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '密码',
@@ -69,7 +94,11 @@ CREATE TABLE `doctor` (
                           PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '医生信息表';
 
-CREATE TABLE `user` (
+-- ----------------------------
+-- Table structure for user
+-- ----------------------------
+
+CREATE TABLE if not exists `user` (
                         `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键',
                         `username` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '用户名',
                         `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '密码',
@@ -82,7 +111,12 @@ CREATE TABLE `user` (
                         PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '患者信息表';
 
-CREATE TABLE `plan` (
+-- ----------------------------
+-- Table structure for plan
+-- ----------------------------
+
+
+CREATE TABLE if not exists `plan` (
                         `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                         `doctor_id` int(10) DEFAULT NULL COMMENT '医生ID',
                         `num` int(10) DEFAULT NULL COMMENT '就诊数量',
@@ -90,7 +124,11 @@ CREATE TABLE `plan` (
                         PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '排班信息表';
 
-CREATE TABLE `record` (
+-- ----------------------------
+-- Table structure for record
+-- ----------------------------
+
+CREATE TABLE if not exists `record` (
                           `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                           `user_id` int(10) DEFAULT NULL COMMENT '患者ID',
                           `doctor_id` int(10) DEFAULT NULL COMMENT '医生ID',
@@ -101,7 +139,11 @@ CREATE TABLE `record` (
                           PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '就诊记录表';
 
-CREATE TABLE `registration` (
+-- ----------------------------
+-- Table structure for registration
+-- ----------------------------
+
+CREATE TABLE if not exists `registration` (
                                 `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                                 `user_id` int(10) DEFAULT NULL COMMENT '患者ID',
                                 `room` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '房号',
@@ -112,7 +154,11 @@ CREATE TABLE `registration` (
                                 PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '住院登记表';
 
-CREATE TABLE `reserve` (
+-- ----------------------------
+-- Table structure for reserve
+-- ----------------------------
+
+CREATE TABLE if not exists `reserve` (
                            `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                            `user_id` int(10) DEFAULT NULL COMMENT '患者ID',
                            `doctor_id` int(10) DEFAULT NULL COMMENT '医生ID',

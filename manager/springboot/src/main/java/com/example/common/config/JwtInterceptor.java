@@ -14,6 +14,7 @@ import com.example.exception.CustomException;
 import com.example.service.AdminService;
 import com.example.service.DoctorService;
 import com.example.service.UserService;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -41,7 +42,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     private DoctorService doctorService;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    public boolean preHandle(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) {
         // 1. 从http请求的header中获取token
         String token = request.getHeader(Constants.TOKEN);
         if (ObjectUtil.isEmpty(token)) {
@@ -61,16 +62,17 @@ public class JwtInterceptor implements HandlerInterceptor {
             // 根据userId查询数据库
             if (RoleEnum.ADMIN.name().equals(role)) {
                 account = adminService.selectById(Integer.valueOf(userId));
-            }
-            if(RoleEnum.DOCTOR.name().equals(role)) {
+            } else if (RoleEnum.DOCTOR.name().equals(role)) {
                 account = doctorService.selectById(Integer.valueOf(userId));
-            }
-            if(RoleEnum.USER.name().equals(role)) {
+            } else if (RoleEnum.USER.name().equals(role)) {
                 account = userService.selectById(Integer.valueOf(userId));
             }
         } catch (Exception e) {
             throw new CustomException(ResultCodeEnum.TOKEN_CHECK_ERROR);
         }
+        /*
+        没找到登录的角色
+         */
         if (ObjectUtil.isNull(account)) {
             throw new CustomException(ResultCodeEnum.USER_NOT_EXIST_ERROR);
         }
